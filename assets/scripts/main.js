@@ -1,15 +1,15 @@
 ﻿$(function () {
-  var bounds = new L.LatLngBounds(
+  const bounds = new L.LatLngBounds(
     new L.LatLng(-49.875, 34.25),
     new L.LatLng(-206, 221)
   )
-  var map = L.map('mapContainer', {
+  const map = L.map('mapContainer', {
     crs: L.CRS.Simple,
     attributionControl: false,
     maxBounds: bounds,
     maxBoundsViscosity: 1.0,
   }).setView([0, 0], 2)
-  var layer = L.tileLayer('assets/maps/{z}_{x}_{y}.png', {
+  const layer = L.tileLayer('assets/maps/{z}_{x}_{y}.png', {
     attribution: '&copy; David',
     minZoom: 2,
     maxZoom: 7,
@@ -17,10 +17,15 @@
     bounds: bounds,
   }).addTo(map)
 
-  var markerStyle = {}
-  var visibleMarker = {}
-  var css = ''
-  var typeChinese = {
+  console.log('layer', layer)
+  layer.on('tileload', () => {
+    console.log('tileload 当瓦片加载时触发')
+  })
+
+  const markerStyle = {}
+  const visibleMarker = {}
+  let css = ''
+  const typeChinese = {
     quest: '任务',
     miniboss: '头目',
     treasure: '宝箱',
@@ -32,18 +37,18 @@
     'korok-seed': '种子',
     memory: '记忆',
   }
-  var listContainer = $('#switchType ul')
+  const listContainer = $('#switchType ul')
   $('<li>').attr('data-type', 'all').text('全部').appendTo(listContainer)
   $('<li>').attr('data-type', 'none').text('无').appendTo(listContainer)
   console.log(markerCatalog, 'markerCatalog')
   $.each(markerCatalog, function () {
-    var name = this.name
+    const name = this.name
     $('<li>')
       .text(typeChinese[name] || name)
       .appendTo(listContainer)
       .addClass('title')
     $.each(this.children, function () {
-      var name = this.name
+      const name = this.name
       $('<li>')
         .attr('data-type', this.id)
         .text(typeChinese[name] || name)
@@ -67,7 +72,7 @@
   })
   function toggleVisible(type) {
     if (type === 'all' || type === 'none') {
-      for (var o in visibleMarker) {
+      for (let o in visibleMarker) {
         if (visibleMarker.hasOwnProperty(o)) {
           visibleMarker[o] = type === 'all' ? true : false
         }
@@ -80,7 +85,7 @@
           visibleMarker[type] = true
         }
       } else {
-        for (var p in visibleMarker) {
+        for (let p in visibleMarker) {
           if (visibleMarker.hasOwnProperty(p)) {
             visibleMarker[p] = false
           }
@@ -92,8 +97,8 @@
     refreshMarker('filter')
   }
   function refreshFilter() {
-    var allVisible = true
-    var allHidden = true
+    let allVisible = true
+    let allHidden = true
     for (var o in visibleMarker) {
       if (visibleMarker.hasOwnProperty(o)) {
         if (!visibleMarker[o]) {
@@ -109,7 +114,7 @@
     } else if (allHidden) {
       $('#switchType li[data-type=none]').addClass('current')
     } else {
-      for (var p in visibleMarker) {
+      for (let p in visibleMarker) {
         if (visibleMarker.hasOwnProperty(p)) {
           if (visibleMarker[p]) {
             $("#switchType li[data-type='" + p + "']").addClass('current')
@@ -118,18 +123,18 @@
       }
     }
   }
-  var cacheMarker = []
+  let cacheMarker = []
   function refreshMarker(from) {
     $.each(cacheMarker, function () {
       this.remove()
     })
     cacheMarker = []
     $.each(markerData, function () {
-      var visible = false
+      let visible = false
       if (from === 'filter' && visibleMarker[this.markerCategoryId])
         visible = true
       if (from === 'search') {
-        var keyword = $('#keywords').val()
+        const keyword = $('#keywords').val()
         if (
           this.name
             .toLowerCase()
@@ -146,17 +151,17 @@
           visible = true
       }
       if (visible) {
-        var key =
+        const key =
           this.markerCategoryId +
           '-' +
           this.id +
           '-' +
           this.name.replace(/[^A-Z]/gi, '-')
-        var popupHtml = '<div class="popupContainer">'
+        let popupHtml = '<div class="popupContainer">'
         popupHtml += '<strong class="name">' + this.name + '</strong>'
         popupHtml += '<div class="buttonContainer">'
         popupHtml +=
-          '<span class="markButton" onclick="markPoint(this)" data-key="' +
+          '<span class="markButton" onclick="changeMarkPoint(this)" data-key="' +
           key +
           '">标记</span>'
         popupHtml +=
@@ -178,7 +183,7 @@
         popupHtml += '</div>'
         if (this.markerCategoryId === '1925') {
           if (shrinesToJapanese[this.name]) {
-            var jName = shrinesToJapanese[this.name]
+            const jName = shrinesToJapanese[this.name]
             popupHtml += '<strong class="name">' + jName + '</strong>'
             popupHtml += '<div class="buttonContainer">'
             popupHtml +=
@@ -203,13 +208,13 @@
           }
         }
         popupHtml += '</div>'
-        var className = 'mark-' + key
+        let className = 'mark-' + key
         if (localStorage.getItem(key)) {
           className += ' marked'
         }
         className += ' markIcon'
         className += ' icon-' + markerStyle[this.markerCategoryId]
-        var marker = L.marker([this.y, this.x], {
+        const marker = L.marker([this.y, this.x], {
           title: this.name,
           icon: L.divIcon({
             className: className,
@@ -225,9 +230,9 @@
     })
   }
   toggleVisible('1925')
-  var lastKeyworld = ''
+  let lastKeyworld = ''
   setInterval(function () {
-    var newKeyword = $('#keywords').val()
+    const newKeyword = $('#keywords').val()
     if (newKeyword !== lastKeyworld) {
       if (newKeyword) {
         lastKeyworld = newKeyword
@@ -240,16 +245,95 @@
   $('#clearKeyword').click(function () {
     $('#keywords').val('')
   })
+
+  map.on('click', onMapClick)
+  function onMapClick(e) {
+    console.log(e, this)
+    // TODO: 限制点击在有图的地图上
+    if (currentMarker) {
+      currentMarker.remove()
+    }
+    // containerPoint: L.Point {x: 614, y: 480} // 鼠标事件发生的点相对于地图容器的像素坐标
+    // latlng: L.LatLng {lat: -131, lng: 132} // 鼠标事件发生的地理坐标
+    // layerPoint: L.Point {x: 614, y: 480} // 鼠标事件发生点相对于地图图层的像素坐标
+    const { containerPoint, latlng, layerPoint } = e
+    // const { x,y} = containerPoint
+    // const { x,y} = layerPoint
+    const { lat: x, lng: y } = latlng
+    const className =
+      'leaflet-marker-icon mark-1925-2914-Sah-Dahaj-Shrine markIcon icon-BotW_Shrines '
+    const marker = L.marker([x, y], {
+      title: 'test',
+      icon: L.divIcon({
+        className: className,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        popupAnchor: [0, -10],
+      }),
+      draggable: true,
+    }).addTo(map)
+    this.marker = marker
+    const popup = marker.bindPopup(
+      '<div><button id="" onclick="addPoint(this)">确定</button><button id="" onclick="cancelPoint(this)">取消</button></div>'
+    )
+    popup.openPopup()
+    currentMarker = marker
+    marker.on('dragend', (e) => {
+      console.log(e, 'dragend')
+      popup.openPopup()
+    })
+  }
 })
 
-function markPoint(element) {
-  var that = $(element)
-  var key = that.attr('data-key')
-  var oldValue = localStorage.getItem(key)
-  var newValue = !oldValue
+let currentMarker = null
+
+// 标记/去除标记
+function changeMarkPoint(element) {
+  const that = $(element)
+  const key = that.attr('data-key')
+  const oldValue = localStorage.getItem(key)
+  const newValue = !oldValue
   localStorage.setItem(key, newValue ? '1' : '')
   $('#mapContainer .leaflet-marker-pane .mark-' + key).toggleClass(
     'marked',
     newValue
   )
+}
+
+function addPoint(element) {
+  // 禁用拖拽
+  currentMarker.dragging.disable()
+  // 关闭popup
+  currentMarker.closePopup()
+  // 重新渲染popup样式
+  currentMarker.unbindPopup()
+  currentMarker.bindPopup('123')
+  // 保存到本地
+  let customMarkers = []
+  try {
+    const str = localStorage.getItem('customMarkers')
+    customMarkers = JSON.parse(str)
+    if (!Array.isArray(customMarkers)) {
+      customMarkers = []
+    }
+  } catch {
+    localStorage.removeItem('customMarkers')
+  }
+  const { _latlng } = currentMarker
+  customMarkers.push({
+    id: new Date().getTime(),
+    markerCategoryId: '1925', // 分类
+    markerCategoryTypeId: '1',
+    userName: '',
+    name: '测试', // 标题
+    description: '123',
+    x: _latlng.lng,
+    y: _latlng.lat,
+    visible: '1',
+  })
+  localStorage.setItem('customMarkers', JSON.stringify(customMarkers))
+}
+function cancelPoint(element) {
+  currentMarker.closePopup()
+  currentMarker.remove()
 }
